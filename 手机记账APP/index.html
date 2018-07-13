@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>Hello 记账APP</title>
+    <link rel="stylesheet" type="text/css" href="./css/mui.min.css" />
+    <style type="text/css">
+        html,body{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width:100%;
+        }
+        .mui-content{
+            height: 100%;
+        }
+        #wrap{
+            height: 100%;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-flex-flow: column;
+            flex-flow: column;
+        }
+        #header{
+            text-align: left;
+            background-color: #81a9c3;
+            color: #fff;
+            width: 100%;
+        }
+        #header h1{
+            font-size: 20px; height: 44px; line-height: 44px; margin: 0em; color: #fff;
+        }
+        #main_body{
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <div id="header">
+            <h1>手机记账APP</h1>
+        </div>
+        <div id="main_body">
+            <div class="mui-content">
+                <div id="main" class="mui-control-content mui-active">
+                    <div class="title">
+                        主页
+                    </div>
+                </div>
+                <div id="income" class="mui-control-content">
+                    <div class="title">
+                        收入记录
+                    </div>
+                </div>
+                <div id="payment" class="mui-control-content">
+                    <div class="title">
+                        支出记录
+                    </div>
+                </div>
+                <div id="home" class="mui-control-content">
+                    <div class="mui-content">
+                        <ul class="mui-table-view">
+                            <li class="mui-table-view-cell mui-media">
+                                <a href="javascript:void(0);" id="setSignature">
+                                    <img class="mui-media-object mui-pull-left" src="image/portrait.jpg">
+                                    <div class="mui-media-body">
+                                        <div id="username"></div>
+                                        <p id="signature">这个人好懒，没有个性签名</p>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <ul class="mui-table-view" style="margin-top: 30px">
+                            <li class="mui-table-view-cell">
+                                <a class="mui-navigate-right">查看账单</a>
+                            </li>
+                            <li class="mui-table-view-cell">
+                                <a class="mui-navigate-right">设置支出种类</a>
+                            </li>
+                            <li class="mui-table-view-cell">
+                                <a class="mui-navigate-right">设置收入种类</a>
+                            </li>
+                        </ul>
+                        <ul class="mui-table-view" style="margin-top: 30px">
+                            <li class="mui-table-view-cell">
+                                <a class="mui-navigate-right" id="exit">注销账户</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+        </div>
+        <div id="footer_nav" class="mui-bar mui-bar-tab">
+            <a class="mui-tab-item mui-active" href="#main">
+                <span class="mui-icon mui-icon-home"></span>
+                <span class="mui-tab-label">首页</span>
+            </a>
+            <a class="mui-tab-item " href="#income">
+                <span class="mui-icon mui-icon-compose"></span>
+                <span class="mui-tab-label">收入记录</span>
+            </a>
+            <a class="mui-tab-item " href="#payment">
+                <span class="mui-icon mui-icon-compose"></span>
+                <span class="mui-tab-label">支出记录</span>
+            </a>
+            <a class="mui-tab-item " href="#home">
+                <span class="mui-icon mui-icon-personadd"></span>
+                <span class="mui-tab-label">我的主页</span>
+            </a>
+        </div>
+
+    </div>
+    </div>
+</body>
+<script type="application/javascript" src="./script/mui.min.js"></script>
+<script type="application/javascript" src="./script/userLogin.js"></script>
+<script type="text/javascript">
+    mui.init({
+        swipeBack:true //启用右滑关闭功能
+    });
+    mui.ready(function () {
+        /*设置用户名*/
+        var username=document.getElementById("username");
+        var signature=document.getElementById("signature");
+        var parameter=getRequest();
+        username.innerText=parameter["username"];
+        signature.innerText=parameter["signature"];
+        /*设置个性签名*/
+        mui("#home").on("tap","#exit",function () {
+            base_ajax(site_url+"/UserServlet/UserExit",null,function () {
+                location.href="html/login.html";
+                return;
+            })
+        });
+        mui("#home").on("tap","#setSignature",function (e) {
+            e.detail.gesture.preventDefault();//修复iOS 8.x平台存在的bug，使用plus.nativeUI.prompt会造成输入法闪一下又没了
+            var btnArray = ['取消', '确定'];
+            mui.prompt("请设置您的个性签名",signature.innerText,"个性签名",btnArray,function (e) {
+                if(e.index==0){
+                    mui.toast("取消");
+                }else{
+                    var sig=trim(e.value);
+                    var data={
+                        "signature":sig
+                    };
+                    base_ajax(site_url+"/UserServlet/UpdateSignature",data,function (data) {
+                        if(data.errno==0){
+                            signature.innerText=sig;
+                            return;
+                        }else if (data.errno==3){
+                            location.href="login.html";
+                            return;
+                        }
+                    });
+                }
+            });
+        })
+    });
+    /*获取URL传来的参数*/
+    function getRequest() {
+        var url=location.search;
+        var theRequest=new Object();
+        if(url.indexOf("?")!=-1){
+            var str=url.substr(1);
+            strs=str.split("&");
+            for(var i=0;i<strs.length;i++){
+                theRequest[strs[i].split("=")[0]]=decodeURI(strs[i].split("=")[1]);
+            }
+        }
+        return theRequest;
+    }
+    /*对字符串进行操作，删除左右两端的空格*/
+    function trim(str) { //删除左右两端的空格
+        return str.replace(/(^\s*)|(\s*$)/g, "");
+    }
+</script>
+</html>

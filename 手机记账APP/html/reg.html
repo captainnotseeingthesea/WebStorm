@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>手机记账APP用户注册</title>
+    <link rel="stylesheet" href="../css/mui.min.css">
+</head>
+<body>
+    <div id="home_reg">
+       <div class="mui-bar mui-bar-nav">
+           <a class="mui-icon mui-icon-left-nav back_login"></a>
+           <h1 class="mui-title">注册</h1>
+       </div>
+       <div class="mui-content">
+           <form class="mui-input-group">
+               <div class="mui-input-row">
+                   <label>账号</label>
+                   <input id='username' name="username" type="text" class="mui-input-clear mui-input" placeholder="请输入账号">
+               </div>
+               <div class="mui-input-row">
+                   <label>密码</label>
+                   <input id='password_reg' name="password_reg" type="password" class="mui-input-clear mui-input" placeholder="请输入密码">
+               </div>
+               <div class="mui-input-row">
+                   <label>确认</label>
+                   <input id='password_confirm' name="password_confirm" type="password" class="mui-input-clear mui-input" placeholder="请确认密码">
+               </div>
+           </form>
+       </div>
+       <div class="mui-content-padded">
+           <button id='reg' class="mui-btn mui-btn-block mui-btn-primary">注册</button>
+       </div>
+     </div>
+    <script type="application/javascript" src="../script/mui.min.js"></script>
+    <script type="application/javascript" src="../script/userLogin.js"></script>
+    <script type="application/javascript">
+        mui.init();
+        mui.ready(function () {
+            mui("#home_reg").on("tap",".back_login",function () {
+                location.href="login.html";
+                return;
+            });
+            mui("#home_reg").on("tap","#reg",function () {
+                var username=document.getElementById("username").value;
+                var password_reg=document.getElementById("password_reg").value;
+                var password_confirm=document.getElementById("password_confirm").value;
+                var data={
+                    "username":username,
+                    "password_reg":password_reg,
+                    "password_confirm":password_confirm
+                }
+                base_ajax(site_url+"/UserServlet/UserReg",data,function (data) {
+                    if(data.errno=="0"){
+                        location.href="../index.html?username="+encodeURI(data.username)+"&signature="+encodeURI(data.signature);
+                    }
+                    return;
+                })
+            });
+        });
+
+    </script>
+</body>
+</html>
