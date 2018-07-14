@@ -52,7 +52,7 @@
                     "password_reg":password_reg,
                     "password_confirm":password_confirm
                 }
-                base_ajax(site_url+"/UserServlet/UserReg",data,function (data) {
+                base_ajax(site_url+"/servlet.UserServlet/UserReg",data,function (data) {
                     if(data.errno=="0"){
                         location.href="../index.html?username="+encodeURI(data.username)+"&signature="+encodeURI(data.signature);
                     }

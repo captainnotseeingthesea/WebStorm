@@ -54,7 +54,7 @@
     <script type="application/javascript" src="../script/userLogin.js"></script>
     <script type="application/javascript">
         mui.init();
-        base_ajax(site_url+"/UserServlet/IsOnline",null,function(data) {
+        base_ajax(site_url+"/servlet.UserServlet/IsOnline",null,function(data) {
             if (data.errno == "0") {
                 location.href = "../index.html?username="+encodeURI(data.username)+"&signature="+encodeURI(data.signature);
             }else{
@@ -75,7 +75,7 @@
                     "password":password_login
                 };
                 /*ajax请求登录*/
-                base_ajax(site_url+"/UserServlet/UserLogin",data,function (data) {
+                base_ajax(site_url+"/servlet.UserServlet/UserLogin",data,function (data) {
                     if(data.errno=="0"){
                         if(isActive){
                             localStorage.setItem("remember","true");

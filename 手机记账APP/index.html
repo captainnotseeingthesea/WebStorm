@@ -25,47 +25,52 @@
             -webkit-flex-flow: column;
             flex-flow: column;
         }
-        #header{
-            text-align: left;
-            background-color: #81a9c3;
-            color: #fff;
-            width: 100%;
-        }
-        #header h1{
-            font-size: 20px; height: 44px; line-height: 44px; margin: 0em; color: #fff;
-        }
         #main_body{
             -webkit-box-flex: 1;
             -webkit-flex: 1;
             flex: 1;
         }
+        #main_body .mui-bar-nav{
+            background-color: #272822;
+        }
+        #main_body .mui-bar-nav .mui-title{
+            color: #efeff4;
+        }
     </style>
 </head>
 <body>
     <div id="wrap">
-        <div id="header">
-            <h1>手机记账APP</h1>
-        </div>
-        <div id="main_body">
-            <div class="mui-content">
+        <div id="main_body" class="mui-content">
                 <div id="main" class="mui-control-content mui-active">
-                    <div class="title">
+                    <div class="mui-bar mui-bar-nav">
+                        <h1 class="mui-title">手机记账</h1>
+                    </div>
+                    <div class="mui-content">
                         主页
                     </div>
                 </div>
                 <div id="income" class="mui-control-content">
-                    <div class="title">
+                    <div class="mui-bar mui-bar-nav">
+                        <h1 class="mui-title">手机记账</h1>
+                    </div>
+                    <div class="mui-content">
                         收入记录
                     </div>
                 </div>
                 <div id="payment" class="mui-control-content">
-                    <div class="title">
+                    <div class="mui-bar mui-bar-nav">
+                        <h1 class="mui-title">手机记账</h1>
+                    </div>
+                    <div class="mui-content">
                         支出记录
                     </div>
                 </div>
                 <div id="home" class="mui-control-content">
-                    <div class="mui-content">
-                        <ul class="mui-table-view">
+                    <div class="mui-bar mui-bar-nav">
+                        <h1 class="mui-title">手机记账</h1>
+                    </div>
+                    <div style="margin-top: 5%" class="mui-content">
+                        <ul class="mui-table-view" >
                             <li class="mui-table-view-cell mui-media">
                                 <a href="javascript:void(0);" id="setSignature">
                                     <img class="mui-media-object mui-pull-left" src="image/portrait.jpg">
@@ -79,18 +84,24 @@
 
                         <ul class="mui-table-view" style="margin-top: 30px">
                             <li class="mui-table-view-cell">
-                                <a class="mui-navigate-right">查看账单</a>
+                                <a class="mui-navigate-right" href="javascript:void(0);">查看账单</a>
                             </li>
                             <li class="mui-table-view-cell">
-                                <a class="mui-navigate-right">设置支出种类</a>
+                                <a class="mui-navigate-right" href="javascript:void(0);">新建支出项</a>
                             </li>
                             <li class="mui-table-view-cell">
-                                <a class="mui-navigate-right">设置收入种类</a>
+                                <a class="mui-navigate-right" href="javascript:void(0);">新建收入项</a>
+                            </li>
+                            <li class="mui-table-view-cell">
+                                <a class="mui-navigate-right" id="setPaymentClass" href="javascript:void(0);">设置支出种类</a>
+                            </li>
+                            <li class="mui-table-view-cell">
+                                <a class="mui-navigate-right" id="setIncomeClass" href="javascript:void(0);">设置收入种类</a>
                             </li>
                         </ul>
                         <ul class="mui-table-view" style="margin-top: 30px">
                             <li class="mui-table-view-cell">
-                                <a class="mui-navigate-right" id="exit">注销账户</a>
+                                <a class="mui-navigate-right" id="exit" href="javascript:void(0);">注销账户</a>
                             </li>
                         </ul>
                     </div>
@@ -114,8 +125,42 @@
                 <span class="mui-tab-label">我的主页</span>
             </a>
         </div>
-
     </div>
+    <div id="paymentItem" style="display: none;">
+        <div class="mui-bar mui-bar-nav">
+            <a class="mui-icon mui-icon-left-nav back_wrap"></a>
+            <h1 class="mui-title">新建支出项</h1>
+        </div>
+        <div class="mui-content">
+
+        </div>
+    </div>
+    <div id="incomeItem" style="display: none;">
+        <div class="mui-bar mui-bar-nav">
+            <a class="mui-icon mui-icon-left-nav back_wrap"></a>
+            <h1 class="mui-title">新建收入项</h1>
+        </div>
+        <div class="mui-content">
+
+        </div>
+    </div>
+    <div id="paymentClass" style="display: none;">
+        <div class="mui-bar mui-bar-nav">
+            <a class="mui-icon mui-icon-left-nav back_wrap"></a>
+            <h1 class="mui-title">支出种类设置</h1>
+        </div>
+        <div class="mui-content">
+
+        </div>
+    </div>
+    <div id="incomeClass" style="display: none;">
+        <div class="mui-bar mui-bar-nav">
+            <a class="mui-icon mui-icon-left-nav back_wrap"></a>
+            <h1 class="mui-title">收入种类设置</h1>
+        </div>
+        <div class="mui-content">
+
+        </div>
     </div>
 </body>
 <script type="application/javascript" src="./script/mui.min.js"></script>
@@ -133,7 +178,7 @@
         signature.innerText=parameter["signature"];
         /*设置个性签名*/
         mui("#home").on("tap","#exit",function () {
-            base_ajax(site_url+"/UserServlet/UserExit",null,function () {
+            base_ajax(site_url+"/servlet.UserServlet/UserExit",null,function () {
                 location.href="html/login.html";
                 return;
             })
@@ -149,7 +194,7 @@
                     var data={
                         "signature":sig
                     };
-                    base_ajax(site_url+"/UserServlet/UpdateSignature",data,function (data) {
+                    base_ajax(site_url+"/servlet.UserServlet/UpdateSignature",data,function (data) {
                         if(data.errno==0){
                             signature.innerText=sig;
                             return;
@@ -160,6 +205,32 @@
                     });
                 }
             });
+        });
+        /*设置收入类别的显隐*/
+        mui("#home").on("tap","#setIncomeClass",function () {
+            var wrap=document.getElementById("wrap");
+            var incomeClass=document.getElementById("incomeClass");
+            wrap.style.display="none";
+            incomeClass.style.display="block";
+        });
+        mui("#incomeClass").on("tap",".back_wrap",function () {
+            var wrap=document.getElementById("wrap");
+            var incomeClass=document.getElementById("incomeClass");
+            wrap.style.display="block";
+            incomeClass.style.display="none";
+        });
+        /*设置支出类别的显隐*/
+        mui("#home").on("tap","#setPaymentClass",function () {
+            var wrap=document.getElementById("wrap");
+            var paymentClass=document.getElementById("paymentClass");
+            wrap.style.display="none";
+            paymentClass.style.display="block";
+        });
+        mui("#paymentClass").on("tap",".back_wrap",function () {
+            var wrap=document.getElementById("wrap");
+            var paymentClass=document.getElementById("paymentClass");
+            wrap.style.display="block";
+            paymentClass.style.display="none";
         })
     });
     /*获取URL传来的参数*/
