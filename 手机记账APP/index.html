@@ -6,6 +6,9 @@
     <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
     <title>Hello 记账APP</title>
     <link rel="stylesheet" type="text/css" href="./css/mui.min.css" />
+    <link rel="stylesheet" type="text/css" href="./css/mui.picker.css">
+    <link rel="stylesheet" type="text/css" href="./css/mui.poppicker.css">
+    <link rel="stylesheet" type="text/css" href="./css/mui.dtpicker.css">
     <style type="text/css">
         html,body{
             margin: 0;
@@ -36,6 +39,37 @@
         #main_body .mui-bar-nav .mui-title{
             color: #efeff4;
         }
+        .popover{
+            width: 80%;
+            border-radius: 25px;
+            background: rgb(255,255,255);
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform:translateX(-50%) translateY(-50%);
+            -ms-transform:translateX(-50%) translateY(-50%); 	/* IE 9 */
+            -moz-transform:translateX(-50%) translateY(-50%); 	/* Firefox */
+            -webkit-transform:translateX(-50%) translateY(-50%); /* Safari 和 Chrome */
+        }
+        #paymentClass .newPaymentClass,#incomeClass .newIncomeClass,#paymentClass .updatePaymentClass,#incomeClass .updateIncomeClass{
+            height: 25%;
+        }
+        .popover .mui-popover-arrow{
+            display: none;
+        }
+        .popover .popover_title{
+            line-height: 50px;
+            height: 50px;
+            font-size: 20px;
+            text-align: center;
+        }
+        #main,#income,#payment{
+            height:100%;
+        }
+        #main .chart,#income .chart,#payment .chart{
+            height: 80%;
+        }
+
     </style>
 </head>
 <body>
@@ -46,7 +80,7 @@
                         <h1 class="mui-title">手机记账</h1>
                     </div>
                     <div class="mui-content">
-                        主页
+                        <div class="chart" id="pieChart_all"></div>
                     </div>
                 </div>
                 <div id="income" class="mui-control-content">
@@ -54,7 +88,7 @@
                         <h1 class="mui-title">手机记账</h1>
                     </div>
                     <div class="mui-content">
-                        收入记录
+                        <div class="chart" id="pieChart_income"></div>
                     </div>
                 </div>
                 <div id="payment" class="mui-control-content">
@@ -62,21 +96,21 @@
                         <h1 class="mui-title">手机记账</h1>
                     </div>
                     <div class="mui-content">
-                        支出记录
+                        <div class="chart" id="pieChart_payment"></div>
                     </div>
                 </div>
                 <div id="home" class="mui-control-content">
                     <div class="mui-bar mui-bar-nav">
                         <h1 class="mui-title">手机记账</h1>
                     </div>
-                    <div style="margin-top: 5%" class="mui-content">
-                        <ul class="mui-table-view" >
+                    <div class="mui-content">
+                        <ul class="mui-table-view">
                             <li class="mui-table-view-cell mui-media">
                                 <a href="javascript:void(0);" id="setSignature">
                                     <img class="mui-media-object mui-pull-left" src="image/portrait.jpg">
                                     <div class="mui-media-body">
                                         <div id="username"></div>
-                                        <p id="signature">这个人好懒，没有个性签名</p>
+                                        <p id="signature"></p>
                                     </div>
                                 </a>
                             </li>
@@ -84,13 +118,13 @@
 
                         <ul class="mui-table-view" style="margin-top: 30px">
                             <li class="mui-table-view-cell">
-                                <a class="mui-navigate-right" href="javascript:void(0);">查看账单</a>
+                                <a class="mui-navigate-right" id="checkBill" href="javascript:void(0);">查看账单</a>
                             </li>
                             <li class="mui-table-view-cell">
-                                <a class="mui-navigate-right" href="javascript:void(0);">新建支出项</a>
+                                <a class="mui-navigate-right" id="setPaymentItem" href="javascript:void(0);">新建支出项</a>
                             </li>
                             <li class="mui-table-view-cell">
-                                <a class="mui-navigate-right" href="javascript:void(0);">新建收入项</a>
+                                <a class="mui-navigate-right" id="setIncomeItem" href="javascript:void(0);">新建收入项</a>
                             </li>
                             <li class="mui-table-view-cell">
                                 <a class="mui-navigate-right" id="setPaymentClass" href="javascript:void(0);">设置支出种类</a>
@@ -108,15 +142,15 @@
                 </div>
         </div>
         <div id="footer_nav" class="mui-bar mui-bar-tab">
-            <a class="mui-tab-item mui-active" href="#main">
+            <a class="mui-tab-item mui-active" href="#main" id="all_record">
                 <span class="mui-icon mui-icon-home"></span>
                 <span class="mui-tab-label">首页</span>
             </a>
-            <a class="mui-tab-item " href="#income">
+            <a class="mui-tab-item " href="#income" id="income_record">
                 <span class="mui-icon mui-icon-compose"></span>
                 <span class="mui-tab-label">收入记录</span>
             </a>
-            <a class="mui-tab-item " href="#payment">
+            <a class="mui-tab-item " href="#payment" id="payment_record">
                 <span class="mui-icon mui-icon-compose"></span>
                 <span class="mui-tab-label">支出记录</span>
             </a>
@@ -126,13 +160,64 @@
             </a>
         </div>
     </div>
+
+    <div id="bill" style="display: none;">
+        <div class="mui-bar mui-bar-nav">
+            <a class="mui-icon mui-icon-left-nav back_wrap"></a>
+            <h1 class="mui-title">账单</h1>
+            <button class="mui-btn mui-btn-outlined mui-pull-right" id="querySelect">所有账单</button>
+        </div>
+        <div class="mui-content">
+            <ul class="mui-table-view" id="items"></ul>
+        </div>
+    </div>
+    <div id="updateItems" style="display: none;">
+        <div class="mui-bar mui-bar-nav">
+            <a class="mui-icon mui-icon-left-nav back_bill"></a>
+            <h1 class="mui-title"></h1>
+        </div>
+        <div class="mui-content">
+            <div class="mui-content-padded">
+                <button id="updateItemClassSelect" class="mui-btn-block"></button>
+                <button id="updateItemDateSelect" class="mui-btn-block"></button>
+                <label></label>
+                <div class="mui-numbox" data-numbox-min="0"  data-numbox-max="100000000">
+                    <!-- "-"按钮，点击可减小当前数值 -->
+                    <button class="mui-btn mui-numbox-btn-minus" type="button">-</button>
+                    <input class="mui-numbox-input" type="number"/>
+                    <!-- "+"按钮，点击可增大当前数值 -->
+                    <button class="mui-btn mui-numbox-btn-plus" type="button">+</button>
+                </div>
+                <label>元</label>
+            </div>
+            <div class="mui-content-padded">
+                <button id="updateItem" class="mui-btn-block mui-btn mui-btn-primary">确认</button>
+                <button id="deleteItem" class="mui-btn-block mui-btn mui-btn-danger">删除</button>
+            </div>
+        </div>
+    </div>
     <div id="paymentItem" style="display: none;">
         <div class="mui-bar mui-bar-nav">
             <a class="mui-icon mui-icon-left-nav back_wrap"></a>
             <h1 class="mui-title">新建支出项</h1>
         </div>
         <div class="mui-content">
-
+            <div class="mui-content-padded">
+                <button id="NewPaymentClassSelect" class="mui-btn-block">请选择支出种类</button>
+                <button id="NewPaymentDateSelect" class="mui-btn-block">请选择支出日期</button>
+                <label>支出价格</label>
+                <div class="mui-numbox" data-numbox-min="0"  data-numbox-max="100000000">
+                    <!-- "-"按钮，点击可减小当前数值 -->
+                    <button class="mui-btn mui-numbox-btn-minus" type="button">-</button>
+                    <input class="mui-numbox-input" type="number"/>
+                    <!-- "+"按钮，点击可增大当前数值 -->
+                    <button class="mui-btn mui-numbox-btn-plus" type="button">+</button>
+                </div>
+                <label>元</label>
+            </div>
+            <div class="mui-content-padded">
+                <button id="newPayment" class="mui-btn-block mui-btn mui-btn-primary">确认</button>
+            </div>
         </div>
     </div>
     <div id="incomeItem" style="display: none;">
@@ -141,30 +226,115 @@
             <h1 class="mui-title">新建收入项</h1>
         </div>
         <div class="mui-content">
-
+            <div class="mui-content-padded">
+                <button id="NewIncomeClassSelect" class="mui-btn-block">请选择收入种类</button>
+                <button id="NewIncomeDateSelect" class="mui-btn-block">请选择收入日期</button>
+                <label>收入价格</label>
+                <div class="mui-numbox" data-numbox-min="0"  data-numbox-max="100000000">
+                    <!-- "-"按钮，点击可减小当前数值 -->
+                    <button class="mui-btn mui-numbox-btn-minus" type="button">-</button>
+                    <input class="mui-numbox-input" type="number"/>
+                    <!-- "+"按钮，点击可增大当前数值 -->
+                    <button class="mui-btn mui-numbox-btn-plus" type="button">+</button>
+                </div>
+                <label>元</label>
+            </div>
+            <div class="mui-content-padded">
+                <button id="newIncome" class="mui-btn-block mui-btn mui-btn-primary">确认</button>
+            </div>
         </div>
     </div>
     <div id="paymentClass" style="display: none;">
         <div class="mui-bar mui-bar-nav">
             <a class="mui-icon mui-icon-left-nav back_wrap"></a>
             <h1 class="mui-title">支出种类设置</h1>
+            <a class="mui-icon mui-icon mui-icon-plusempty mui-pull-right newClass"></a>
         </div>
         <div class="mui-content">
+            <ul class="mui-table-view" id="paymentClassItem"></ul>
+        </div>
 
+        <div class="mui-popover popover newPaymentClass">
+            <div class="mui-popover-arrow"></div>
+            <div>
+                <div class="popover_title">新建支出种类</div>
+                <form class="mui-input-group">
+                    <div class="mui-input-row">
+                        <label>种类名</label>
+                        <input id="paymentClassName" class="mui-input-clear" type="text" placeholder="请输入收入种类名">
+                    </div>
+                </form>
+                <div class="mui-content-padded"style="text-align: center;">
+                    <button id='newPaymentClass' class="mui-btn mui-btn-outlined mui-btn-primary" style="width: 40%">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="mui-popover popover updatePaymentClass">
+            <div class="mui-popover-arrow"></div>
+            <div>
+                <div class="popover_title">设置支出种类</div>
+                <form class="mui-input-group">
+                    <div class="mui-input-row">
+                        <label>种类名</label>
+                        <input id="newPaymentClassName" class="mui-input-clear" type="text" placeholder="请输入支出种类名">
+                    </div>
+                </form>
+                <div class="mui-content-padded"style="text-align: center;">
+                    <button id='updatePaymentClass' class="mui-btn mui-btn-outlined mui-btn-primary" style="width: 40%">修改</button>
+                    <button id='deletePaymentClass' class="mui-btn mui-btn-outlined mui-btn-warning" style="width: 40%">删除</button>
+
+                </div>
+            </div>
         </div>
     </div>
     <div id="incomeClass" style="display: none;">
         <div class="mui-bar mui-bar-nav">
             <a class="mui-icon mui-icon-left-nav back_wrap"></a>
             <h1 class="mui-title">收入种类设置</h1>
+            <a class="mui-icon mui-icon mui-icon-plusempty mui-pull-right newClass"></a>
         </div>
         <div class="mui-content">
-
+            <ul class="mui-table-view" id="incomeClassItem"></ul>
+        </div>
+        <div class="mui-popover popover newIncomeClass">
+            <div class="mui-popover-arrow"></div>
+            <div>
+                <div class="popover_title">新建收入种类</div>
+                <form class="mui-input-group">
+                    <div class="mui-input-row">
+                        <label>种类名</label>
+                        <input id="incomeClassName" class="mui-input-clear" type="text" placeholder="请输入收入种类名">
+                    </div>
+                </form>
+                <div class="mui-content-padded"style="text-align: center;">
+                    <button id='newIncomeClass' class="mui-btn mui-btn-outlined mui-btn-primary" style="width: 40%">确认</button>
+                </div>
+            </div>
+        </div>
+        <div class="mui-popover popover updateIncomeClass">
+            <div class="mui-popover-arrow"></div>
+            <div>
+                <div class="popover_title">设置收入种类</div>
+                <form class="mui-input-group">
+                    <div class="mui-input-row">
+                        <label>种类名</label>
+                        <input id="newIncomeClassName" class="mui-input-clear" type="text" placeholder="请输入收入种类名">
+                    </div>
+                </form>
+                <div class="mui-content-padded"style="text-align: center;">
+                    <button id='updateIncomeClass' class="mui-btn mui-btn-outlined mui-btn-primary" style="width: 40%">修改</button>
+                    <button id='deleteIncomeClass' class="mui-btn mui-btn-outlined mui-btn-warning" style="width: 40%">删除</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>
 <script type="application/javascript" src="./script/mui.min.js"></script>
 <script type="application/javascript" src="./script/userLogin.js"></script>
+<script type="application/javascript" src="./script/mui.picker.min.js"></script>
+<script type="application/javascript" src="./script/mui.poppicker.js"></script>
+<script type="application/javascript" src="./script/echarts.js"></script>
+<script type="application/javascript" src="./script/display.chart.js"></script>
 <script type="text/javascript">
     mui.init({
         swipeBack:true //启用右滑关闭功能
@@ -176,6 +346,10 @@
         var parameter=getRequest();
         username.innerText=parameter["username"];
         signature.innerText=parameter["signature"];
+        /*设置修改时需传的数据*/
+        var data_update;//修改时传的数据
+        /*设置显示项目类型的数据*/
+        var data_query=0;//0为所有账单，1为收入账单，2为支出账单
         /*设置个性签名*/
         mui("#home").on("tap","#exit",function () {
             base_ajax(site_url+"/servlet.UserServlet/UserExit",null,function () {
@@ -198,13 +372,401 @@
                         if(data.errno==0){
                             signature.innerText=sig;
                             return;
-                        }else if (data.errno==3){
-                            location.href="login.html";
-                            return;
                         }
                     });
                 }
             });
+        });
+        /*设置查看账单显隐*/
+        mui("#home").on("tap","#checkBill",function () {
+            var wrap=document.getElementById("wrap");
+            var bill=document.getElementById("bill");
+            wrap.style.display="none";
+            bill.style.display="block";
+            display_items(data_query);
+        });
+        /*设置要显示条目的类别*/
+        mui("#bill").on("tap","#querySelect",function () {
+           var picker=new mui.PopPicker();
+           var querySelect=document.getElementById("querySelect");
+           var select=[
+               {
+                   value:0,
+                   text:"所有账单"
+               },
+               {
+                   value:1,
+                   text:"收入账单"
+               },
+               {
+                   value:2,
+                   text:"支出账单"
+               }
+           ];
+           picker.setData(select);
+           picker.pickers[0].setSelectedIndex(0);
+           picker.show(function (selectItem) {
+               data_query=selectItem[0].value;
+               querySelect.innerText=selectItem[0].text;
+               display_items(data_query);
+           });
+        });
+        /*返回*/
+        mui("#bill").on("tap",".back_wrap",function () {
+            var wrap=document.getElementById("wrap");
+            var bill=document.getElementById("bill");
+            wrap.style.display="block";
+            bill.style.display="none";
+            data_query=0;
+        });
+        /*设置更改项目的显隐*/
+        mui("#bill").on("tap","#items a",function () {
+           var bill=document.getElementById("bill");
+           var updateItems=document.getElementById("updateItems");
+           var updateItemClassSelect=document.getElementById("updateItemClassSelect");
+           var updateItemDateSelect=document.getElementById("updateItemDateSelect");
+           var updateItem=document.getElementById("updateItem");
+           var title=document.getElementById("updateItems").getElementsByClassName("mui-title")[0];
+           var num_label=document.getElementById("updateItems").getElementsByClassName("mui-content-padded")[0].getElementsByTagName("label")[0];
+           var query=this.getAttribute("query");
+           var className=this.getAttribute("className");
+           var time=this.getAttribute("time");
+           var money=this.getAttribute("money");
+           var classId=this.getAttribute("classId");
+           var id=this.getAttribute("index");
+           updateItemClassSelect.setAttribute("query",query);
+           updateItemClassSelect.setAttribute("classId",classId);
+           updateItemDateSelect.setAttribute("time",time);
+           updateItem.setAttribute("query",query);
+           data_update={
+               id:id,
+               classId:classId,
+               time:time,
+               money:money,
+               query:query
+           };
+           if(query==0){
+               title.innerText="更改收入账单";
+               num_label.innerText="收入价格";
+           }else {
+               title.innerText="更改支出账单";
+               num_label.innerText="支出价格";
+           }
+           updateItemClassSelect.innerText=className;
+           updateItemDateSelect.innerText=time;
+           mui("#updateItems .mui-numbox").numbox().setValue(money);
+           bill.style.display="none";
+           updateItems.style.display="block"
+        });
+        /*设置项目的种类*/
+        mui("#updateItems").on("tap","#updateItemClassSelect",function () {
+            var picker=new mui.PopPicker();
+            var itemClass=new Array(Object);
+            var url;
+            var classId=this.getAttribute("classId");
+            if(this.getAttribute("query")==0){
+                url="/servlet.classServlet/IncomePaymentClass";
+            }else {
+                url="/servlet.classServlet/DisplayPaymentClass";
+            }
+            base_ajax(site_url+url,null,function (data) {
+                for(var i=0;i<data.length;i++){
+                    itemClass[i]={
+                        'text':data[i]["className"],
+                        'value':data[i]["id"]
+                    };
+                }
+                picker.setData(itemClass);
+                picker.pickers[0].setSelectedValue(classId);
+                picker.show(function (selectItem) {
+                    var updateItemClassSelect=document.getElementById("updateItemClassSelect");
+                    updateItemClassSelect.innerText=selectItem[0].text;
+                    data_update["classId"]=selectItem[0].value;
+                });
+            });
+        });
+        /*设置日期显示*/
+        mui("#updateItems").on("tap","#updateItemDateSelect",function () {
+            var myDate=new Date();
+            var time=this.getAttribute("time");
+            var time_str=time.split("年")[0]+"-"+time.split("年")[1].split("月")[0]+"-"+time.split("年")[1].split("月")[1].split("日")[0]+" "+time.split("年")[1].split("月")[1].split("日")[1].split("时")[0];
+            var dtpicker = new mui.DtPicker({
+                type: "hour",//设置日历初始视图模式
+                beginDate: new Date(1999, 12, 27,0),//设置开始日期
+                endDate: new Date(myDate.getFullYear(), myDate.getMonth(), myDate.getDate(),myDate.getHours()),//设置结束日期
+                labels: ['Year', 'Mon', 'Day','hour'],//设置默认标签区域提示语
+            });
+            dtpicker.setSelectedValue(time_str);
+            dtpicker.show(function(e) {
+                var updateItemDateSelect=document.getElementById("updateItemDateSelect");
+                var year=e.y.value;
+                var month=e.m.value;
+                var date=e.d.value;
+                var hour=e.h.value;
+                var time=year+"年"+month+"月"+date+"日"+hour+"时";
+                updateItemDateSelect.innerText=time;
+                data_update["time"]=time;
+            });
+
+        });
+        /*提交修改*/
+        mui("#updateItems").on("tap","#updateItem",function () {
+            var updateItems=document.getElementById("updateItems");
+            var bill=document.getElementById("bill");
+            if(data_update==null){
+                mui.toast("请进行选择");
+            }else {
+                if (data_update["classId"] == null) {
+                    mui.toast("请选择种类");
+                    return;
+                }
+                if (data_update["time"] == null) {
+                    mui.toast("请选择日期");
+                    return;
+                }
+                data_update["money"]=mui("#updateItems .mui-numbox").numbox().getValue();
+                base_ajax(site_url+"/servlet.itemServlet/UpdateItems",data_update,function () {
+                    updateItems.style.display="none";
+                    bill.style.display="block";
+                    display_items(data_query);
+                    data_update=null;
+                })
+            }
+        });
+        mui("#updateItems").on("tap","#deleteItem",function () {
+            var updateItems=document.getElementById("updateItems");
+            var bill=document.getElementById("bill");
+            var btnArray=["取消","确认"];
+            var alarm;
+            if(data_update["query"]==0){
+                alarm="确认删除该收入条目吗？";
+            }else {
+                alarm="确认删除该支出条目吗？";
+            }
+            mui.confirm(alarm,"hello",btnArray,function (e) {
+                if(e.index==1){
+                    base_ajax(site_url+"/servlet.itemServlet/DeleteItems",data_update,function (data) {
+                        updateItems.style.display="none";
+                        bill.style.display="block";
+                        display_items(data_query);
+                        data_update=null;
+                    })
+                }else{
+                    mui.toast("取消");
+                }
+            })
+        });
+        /*返回*/
+        mui("#updateItems").on("tap",".back_bill",function () {
+            var bill=document.getElementById("bill");
+            var updateItems=document.getElementById("updateItems");
+            bill.style.display="block";
+            updateItems.style.display="none";
+            display_items(data_query);
+            data_update=null;
+        });
+        /*设置新建支出项的显隐*/
+        mui("#home").on("tap","#setPaymentItem",function () {
+            var wrap=document.getElementById("wrap");
+            var paymentItem=document.getElementById("paymentItem");
+            wrap.style.display="none";
+            paymentItem.style.display="block";
+        });
+        /*显示可供选择的支出种类*/
+        mui("#paymentItem").on("tap","#NewPaymentClassSelect",function () {
+           var picker=new mui.PopPicker();
+           var paymentClass=new Array();
+            base_ajax(site_url+"/servlet.classServlet/DisplayPaymentClass",null,function (data) {
+                for(var i=0;i<data.length;i++){
+                    paymentClass[i]={
+                        'text':data[i]["className"],
+                        'value':data[i]["id"]
+                    };
+                }
+                if(paymentClass.length==0){
+                    mui.toast("无支出种类可供选择，请先添加种类");
+                }else {
+                    picker.setData(paymentClass);
+                    picker.pickers[0].setSelectedIndex(0);
+                    picker.show(function (selectItem) {
+                        var NewPaymentClassSelect=document.getElementById("NewPaymentClassSelect");
+                        NewPaymentClassSelect.innerText=selectItem[0].text;
+                        if(data_update==null){
+                            data_update={
+                                classId:selectItem[0].value
+                            };
+                        }else {
+                            data_update["classId"]=selectItem[0].value;
+                        }
+                    });
+                }
+
+            });
+        });
+        /*显示日期*/
+        mui("#paymentItem").on("tap","#NewPaymentDateSelect",function () {
+            var myDate=new Date();
+            var dtpicker = new mui.DtPicker({
+                type: "hour",//设置日历初始视图模式
+                beginDate: new Date(1999, 12, 27,0),//设置开始日期
+                endDate: new Date(myDate.getFullYear(), myDate.getMonth(), myDate.getDate(),myDate.getHours()),//设置结束日期
+                labels: ['Year', 'Mon', 'Day','hour'],//设置默认标签区域提示语
+            });
+            dtpicker.show(function(e) {
+                var NewPaymentDateSelect=document.getElementById("NewPaymentDateSelect");
+                var year=e.y.value;
+                var month=e.m.value;
+                var date=e.d.value;
+                var hour=e.h.value;
+                var time=year+"年"+month+"月"+date+"日"+hour+"时";
+                NewPaymentDateSelect.innerText=time;
+                if(data_update!=null){
+                    data_update["time"]=time;
+                }else {
+                    data_update={
+                        time:time
+                    };
+                }
+            });
+        });
+        /*新建支出项*/
+        mui("#paymentItem").on("tap","#newPayment",function () {
+            var money=mui("#paymentItem .mui-numbox").numbox().getValue();
+            var NewPaymentDateSelect=document.getElementById("NewPaymentDateSelect");
+            var NewPaymentClassSelect=document.getElementById("NewPaymentClassSelect");
+            if(data_update==null){
+                mui.toast("请进行选择");
+            }else {
+                if(data_update["classId"]==null){
+                    mui.toast("请选择种类");
+                    return;
+                }
+                if(data_update["time"]==null){
+                    mui.toast("请选择日期");
+                    return;
+                }
+                data_update["money"]=money;
+                base_ajax(site_url+"/servlet.itemServlet/NewPayment",data_update,function (data) {
+                    mui("#paymentItem .mui-numbox").numbox().setValue();
+                    NewPaymentClassSelect.innerText="请选择支出种类";
+                    NewPaymentDateSelect.innerText="请选择支出日期";
+                    data_update=null;
+                });
+            }
+        });
+        mui("#paymentItem").on("tap",".back_wrap",function () {
+           var wrap=document.getElementById("wrap");
+           var paymentItem=document.getElementById("paymentItem");
+           var NewPaymentDateSelect=document.getElementById("NewPaymentDateSelect");
+           var NewPaymentClassSelect=document.getElementById("NewPaymentClassSelect");
+           mui("#paymentItem .mui-numbox").numbox().setValue();
+           NewPaymentClassSelect.innerText="请选择支出种类";
+           NewPaymentDateSelect.innerText="请选择支出日期";
+           wrap.style.display="block";
+           paymentItem.style.display="none";
+           data_update=null;
+        });
+        /*设置新建收入的显隐*/
+        mui("#home").on("tap","#setIncomeItem",function () {
+           var wrap=document.getElementById("wrap");
+           var incomeItem=document.getElementById("incomeItem");
+           wrap.style.display="none";
+           incomeItem.style.display="block";
+        });
+        /*显示可供选择的收入种类*/
+        mui("#incomeItem").on("tap","#NewIncomeClassSelect",function () {
+            var picker=new mui.PopPicker();
+            var incomeClass=new Array();
+            base_ajax(site_url+"/servlet.classServlet/DisplayIncomeClass",null,function (data) {
+                for(var i=0;i<data.length;i++){
+                    incomeClass[i]={
+                        'text':data[i]["className"],
+                        'value':data[i]["id"]
+                    };
+                }
+                if(incomeClass.length==0){
+                    mui.toast("无收入种类可供选择，请先新建种类");
+                }
+                else {
+                    picker.setData(incomeClass);
+                    picker.pickers[0].setSelectedIndex(0);
+                    picker.show(function (selectItem) {
+                        var NewIncomeClassSelect=document.getElementById("NewIncomeClassSelect");
+                        NewIncomeClassSelect.innerText=selectItem[0].text;
+                        if(data_update==null){
+                            data_update={
+                                classId:selectItem[0].value
+                            };
+                        }else {
+                            data_update["classId"]=selectItem[0].value;
+                        }
+                    });
+                }
+
+            });
+        });
+        /*显示日期*/
+        mui("#incomeItem").on("tap","#NewIncomeDateSelect",function () {
+            var myDate=new Date();
+            var dtpicker = new mui.DtPicker({
+                type: "hour",//设置日历初始视图模式
+                beginDate: new Date(1999, 12, 27,0),//设置开始日期
+                endDate: new Date(myDate.getFullYear(), myDate.getMonth(), myDate.getDate(),myDate.getHours()),//设置结束日期
+                labels: ['Year', 'Mon', 'Day','hour'],//设置默认标签区域提示语
+            });
+            dtpicker.show(function(e) {
+                var NewIncomeDateSelect=document.getElementById("NewIncomeDateSelect");
+                var year=e.y.value;
+                var month=e.m.value;
+                var date=e.d.value;
+                var hour=e.h.value;
+                var time=year+"年"+month+"月"+date+"日"+hour+"时";
+                NewIncomeDateSelect.innerText=time;
+                if(data_update!=null){
+                    data_update["time"]=time;
+                }else {
+                    data_update={
+                        time:time
+                    };
+                }
+            });
+        });
+        /*新建收入项*/
+        mui("#incomeItem").on("tap","#newIncome",function () {
+            var money=mui("#incomeItem .mui-numbox").numbox().getValue();
+            var NewIncomeDateSelect=document.getElementById("NewIncomeDateSelect");
+            var NewIncomeClassSelect=document.getElementById("NewIncomeClassSelect");
+            if(data_update==null){
+                mui.toast("请进行选择");
+            }else {
+                if(data_update["classId"]==null){
+                    mui.toast("请选择种类");
+                    return;
+                }
+                if(data_update["time"]==null){
+                    mui.toast("请选择日期");
+                    return;
+                }
+                data_update["money"]=money;
+                base_ajax(site_url+"/servlet.itemServlet/NewIncome",data_update,function (data) {
+                    mui("#incomeItem .mui-numbox").numbox().setValue();
+                    NewIncomeClassSelect.innerText="请选择收入种类";
+                    NewIncomeDateSelect.innerText="请选择收入日期";
+                    data_update=null;
+                });
+            }
+        });
+        mui("#incomeItem").on("tap",".back_wrap",function () {
+            var wrap=document.getElementById("wrap");
+            var incomeItem=document.getElementById("incomeItem");
+            var NewIncomeDateSelect=document.getElementById("NewIncomeDateSelect");
+            var NewIncomeClassSelect=document.getElementById("NewIncomeClassSelect");
+            mui("#incomeItem .mui-numbox").numbox().setValue();
+            NewIncomeClassSelect.innerText="请选择收入种类";
+            NewIncomeDateSelect.innerText="请选择收入日期";
+            data_update=null;
+            wrap.style.display="block";
+            incomeItem.style.display="none";
         });
         /*设置收入类别的显隐*/
         mui("#home").on("tap","#setIncomeClass",function () {
@@ -212,12 +774,59 @@
             var incomeClass=document.getElementById("incomeClass");
             wrap.style.display="none";
             incomeClass.style.display="block";
+            display_incomeClass();
         });
         mui("#incomeClass").on("tap",".back_wrap",function () {
             var wrap=document.getElementById("wrap");
             var incomeClass=document.getElementById("incomeClass");
+            var incomeClassName=document.getElementById("incomeClassName");
             wrap.style.display="block";
             incomeClass.style.display="none";
+            data_update=null;
+            incomeClassName.value="";
+        });
+        /*对收入种类进行操作*/
+        mui("#incomeClass").on("tap","#incomeClassItem a",function (e) {
+            var newIncomeClassName=document.getElementById("newIncomeClassName");
+            newIncomeClassName.value=this.getAttribute("value");
+            data_update={
+                "id":this.getAttribute("index")
+            };
+            mui("#incomeClass .updateIncomeClass").popover("toggle");
+        });
+        /*修改收入种类名称*/
+        mui("#incomeClass").on("tap","#updateIncomeClass",function () {
+            var newIncomeClassName=document.getElementById("newIncomeClassName");
+            data_update["incomeClassName"]=newIncomeClassName.value;
+            base_ajax(site_url+"/servlet.classServlet/UpdateIncomeClass",data_update,function (data) {
+                mui("#incomeClass .updateIncomeClass").popover("hide");
+                display_incomeClass();
+                data_update=null;
+            });
+        });
+        /*删除收入种类*/
+        mui("#incomeClass").on("tap","#deleteIncomeClass",function () {
+            base_ajax(site_url+"/servlet.classServlet/DeleteIncomeClass",data_update,function (data) {
+                mui("#incomeClass .updateIncomeClass").popover("hide");
+                display_incomeClass();
+                data_update=null;
+            });
+        });
+        /*新建收入种类*/
+        mui("#incomeClass").on("tap",".newClass",function () {
+            mui("#incomeClass .newIncomeClass").popover('toggle');
+        });
+        mui("#incomeClass").on("tap","#newIncomeClass",function () {
+           var incomeClass=document.getElementById("incomeClassName");
+           var incomeClassName=trim(incomeClass.value);
+           var data={
+               "incomeClassName":incomeClassName
+           };
+           base_ajax(site_url+"/servlet.classServlet/NewIncomeClass",data,function (data) {
+               mui("#incomeClass .newIncomeClass").popover("hide");
+               display_incomeClass();
+               incomeClass.value="";
+           })
         });
         /*设置支出类别的显隐*/
         mui("#home").on("tap","#setPaymentClass",function () {
@@ -225,12 +834,57 @@
             var paymentClass=document.getElementById("paymentClass");
             wrap.style.display="none";
             paymentClass.style.display="block";
+            display_paymentClass();
         });
         mui("#paymentClass").on("tap",".back_wrap",function () {
             var wrap=document.getElementById("wrap");
             var paymentClass=document.getElementById("paymentClass");
+            var paymentClassName=document.getElementById("paymentClassName");
             wrap.style.display="block";
             paymentClass.style.display="none";
+            data_update=null;
+            paymentClassName.value="";
+        });
+        /*对支出种类进行操作*/
+        mui("#paymentClass").on("tap","#paymentClassItem a",function (e) {
+            var newPaymentClassName=document.getElementById("newPaymentClassName");
+            newPaymentClassName.value=this.getAttribute("value");
+            data_update={
+                "id":this.getAttribute("index")
+            };
+            mui("#paymentClass .updatePaymentClass").popover("toggle");
+        });
+        mui("#paymentClass").on("tap","#updatePaymentClass",function () {
+            var newPaymentClassName=document.getElementById("newPaymentClassName");
+            data_update["paymentClassName"]=newPaymentClassName.value;
+            base_ajax(site_url+"/servlet.classServlet/UpdatePaymentClass",data_update,function (data) {
+                mui("#paymentClass .updatePaymentClass").popover("hide");
+                display_paymentClass();
+                data_update=null;
+            });
+        });
+        mui("#paymentClass").on("tap","#deletePaymentClass",function () {
+           base_ajax(site_url+"/servlet.classServlet/DeletePaymentClass",data_update,function (data) {
+               mui("#paymentClass .updatePaymentClass").popover("hide");
+               display_paymentClass();
+               data_update=null;
+           })
+        });
+        /*新建支出种类*/
+        mui("#paymentClass").on("tap",".newClass",function () {
+            mui("#paymentClass .newPaymentClass").popover('toggle');
+        });
+        mui("#paymentClass").on("tap","#newPaymentClass",function () {
+            var paymentClass=document.getElementById("paymentClassName");
+            var paymentClassName=trim(paymentClass.value);
+            var data={
+                "paymentClassName":paymentClassName
+            };
+            base_ajax(site_url+"/servlet.classServlet/NewPaymentClass",data,function (data) {
+                mui("#paymentClass .newPaymentClass").popover("hide");
+                paymentClass.value="";
+                display_paymentClass();
+            })
         })
     });
     /*获取URL传来的参数*/
@@ -249,6 +903,46 @@
     /*对字符串进行操作，删除左右两端的空格*/
     function trim(str) { //删除左右两端的空格
         return str.replace(/(^\s*)|(\s*$)/g, "");
+    }
+    /*收入类别的显示*/
+    function display_incomeClass(){
+        base_ajax(site_url+"/servlet.classServlet/DisplayIncomeClass",null,function (data) {
+            var arr=[];
+            var displayItem=document.getElementById("incomeClassItem");
+            for(var i=0;i<data.length;i++){
+                arr.push("<li class='mui-table-view-cell'><a class='mui-navigate-right' index="+data[i]['id']+" value="+data[i]['className']+">"+data[i]['className']+"</a></li>");
+            }
+            displayItem.innerHTML=arr.join("");
+        });
+    }
+    /*支出类别的显示*/
+    function display_paymentClass() {
+        base_ajax(site_url+"/servlet.classServlet/DisplayPaymentClass",null,function (data) {
+            var arr=[];
+            var displayItem=document.getElementById("paymentClassItem");
+            for(var i=0;i<data.length;i++){
+                arr.push("<li class='mui-table-view-cell'><a class='mui-navigate-right' index="+data[i]['id']+" value="+data[i]['className']+">"+data[i]['className']+"</a></li>");
+            }
+            displayItem.innerHTML=arr.join("");
+        });
+    }
+    /*条目显示类型的选择*/
+    function display_items(query) {
+        var data={
+            query:query
+        };
+        base_ajax(site_url+"/servlet.itemServlet/DisplayItems",data,function (data) {
+            var arr=[];
+            var displayItem=document.getElementById("items");
+            for(var i=0;i<data.length;i++){
+                if(data[i]["query"]==0){
+                    arr.push("<li class='mui-table-view-cell mui-media'><a index="+data[i]['id']+" classId="+data[i]["classId"]+" className="+data[i]["className"]+" time="+data[i]["time"]+" userId="+data[i]["userId"]+" query="+data[i]["query"]+" money="+data[i]['money']+"><img class='mui-media-object mui-pull-left' src='image/income.png'><div class='mui-media-body'><div>"+data[i]['className']+"<p class='mui-pull-right' style='font-size: 20px;color: #222222 '><span style='color: #2ac845'>+</span>"+data[i]["money"]+"</p></div><p>"+data[i]["time"]+"</p></div></a></li>");
+                }else{
+                    arr.push("<li class='mui-table-view-cell mui-media'><a index="+data[i]['id']+" classId="+data[i]["classId"]+" className="+data[i]["className"]+" time="+data[i]["time"]+" userId="+data[i]["userId"]+" query="+data[i]["query"]+" money="+data[i]['money']+"><img class='mui-media-object mui-pull-left' src='image/payment.png'><div class='mui-media-body'><div>"+data[i]['className']+"<p class='mui-pull-right' style='font-size: 20px;color: #222222 '><span style='color: #cf2d28'>-</span>"+data[i]["money"]+"</p></div><p>"+data[i]["time"]+"</p></div></a></li>");
+                }
+            }
+            displayItem.innerHTML=arr.join("");
+        })
     }
 </script>
 </html>

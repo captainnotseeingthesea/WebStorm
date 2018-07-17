@@ -9,7 +9,13 @@ function base_ajax(url,data,success_func){
         success:function (data) {//成功返回
             success_func(data);
             mui('body').progressbar().hide();
-            mui.toast(data.errmsg);
+            if(data.errmsg!=null && data.errno!=null) {
+                mui.toast(data.errmsg);
+                /*errno为10代表会话超时，需重新登陆*/
+                if(data.errno==10){
+                    location.href="html/login.html";
+                }
+            }
         },
         error:function (xhr,type,errorThrown) {
             mui('body').progressbar().hide();
